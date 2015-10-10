@@ -1,2 +1,13 @@
 Este es el contenido de mi Ultima clase del diplomado.
 ============================================================
+Cubo Olap
+Para hacer un cubo es necesario tener en claro el requerimiento de la empresa.
+
+Tablas de Dimencion y de medida.
+Las bases de datos se crean en un directorio definido 
+* mdf parte fisica. es mas importante salvarlo.
+* ldf parte logica.
+--------------------------------------------
+se puede llevar las bases de datos desmontando y despues adjuntando
+
+
