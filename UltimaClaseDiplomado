@@ -32,7 +32,7 @@ al final se saca un modelo, carga de una data,
 
 ===================================================================================
 Se optiene en los requerimientos
-KPI   = indicador 
+KPI   = indicador (Key Perfomace Indicator)
 MDX = multidimentional para hacer consultas en tablas multidimensional
 
 
@@ -41,4 +41,13 @@ on ROWS vamos a poner las dimensiones
 
 
 EN DMX es necesario saber herencia,  es para hacer consultas mas complejas, 
+==================================
+1 importar datos
+2 generar un modelos (estrella)
+3 
+4
+=====
+Trabajar BIG Data  y Datawarehouse.
+
+
 
