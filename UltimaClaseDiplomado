@@ -48,6 +48,10 @@ EN DMX es necesario saber herencia,  es para hacer consultas mas complejas,
 4
 =====
 Trabajar BIG Data  y Datawarehouse.
+====================================
+* Atomicidad   (Fact - Fecha (OJO) ) identificar la tabla de medida.
+* Juntar tablas para hacer un modelo estrella y si no se puede hacer una modelo copo de nieve.
+
 
 
 
