@@ -34,7 +34,15 @@ al final se saca un modelo, carga de una data,
 Se optiene en los requerimientos
 KPI   = indicador (Key Perfomace Indicator)
 MDX = multidimentional para hacer consultas en tablas multidimensional
-
++++++++++++++++++++++++++++++++++++++++
+SELECT
+non empty {[Measures].[Cantidad Total],[Measures].[Precio Total]} ON COLUMNS,
+non empty {[Dim Tiempo].[Año].allmembers} ON ROWS
+FROM 
+[DW NORTHWINDFINANZAS]
+WHERE 
+[Dim Empleados].[Employee Name].&[Andrew Fuller]
++++++++++++++++++++++++++++++++++++++++
 
 On COLUMNS vamos a poner las medidas
 on ROWS vamos a poner las dimensiones
@@ -51,7 +59,13 @@ Trabajar BIG Data  y Datawarehouse.
 ====================================
 * Atomicidad   (Fact - Fecha (OJO) ) identificar la tabla de medida.
 * Juntar tablas para hacer un modelo estrella y si no se puede hacer una modelo copo de nieve.
+====================================
+Poner nombre tablas - 
+Poner el tipo de atributo - el nombre de la tabla - (Nomenclatura internacional)
+=====================================
+Hay que unir tablas haciendo consultas en diferentes bases de datos.
+======================================
+identificar las tablas de medida y dimension, !!!!!!!!!!!..(la tabla de medida)..!!!!!!
 
-
-
-
+Base de datos de una biblioteca
+PUVS
