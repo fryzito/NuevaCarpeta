@@ -2,6 +2,7 @@ import base64
 import hashlib
 import os
 import sys
+import json
 
 import psycopg2
 
@@ -45,6 +46,29 @@ class Processor:
         #print(result['title'])
         #print(result['html'])
         print("pass result")
+
+    def saveOnJSON(self, result, dir_name):
+
+        # writing on JSON files 
+        try:
+            url_name = result['url']
+            clean_url = ''
+            for ch in url_name:
+                if ch.isalpha() or ch.isdigit():
+                    clean_url = clean_url + ch
+
+            url_name = dir_name+'/'+ clean_url + '.json'
+
+            #print(url_name)
+
+            with open(url_name, 'w') as outfile:  
+                json.dump(result,outfile)
+        except Exception as e:
+            print(e)
+
+        print("pass saveOnJSON")
+
+
 
     def process_el_peruano_document(self, document, scraper):
         # Unused fields
