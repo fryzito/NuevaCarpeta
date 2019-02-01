@@ -47,17 +47,23 @@ class Processor:
         #print(result['html'])
         print("pass result")
 
-    def saveOnJSON(self, result, dir_name):
+    def save_on_json(self, result, dir_name):
 
         # writing on JSON files 
         try:
             url_name = result['url']
-            clean_url = ''
-            for ch in url_name:
-                if ch.isalpha() or ch.isdigit():
-                    clean_url = clean_url + ch
 
-            url_name = dir_name+'/'+ clean_url + '.json'
+             # Name validation
+            url_name = url_name.replace('?','')
+            url_name = url_name.replace('|','')
+            url_name = url_name.replace('>','')
+            url_name = url_name.replace('<','')
+            url_name = url_name.replace('/','')
+            url_name = url_name.replace(':','')
+            url_name = url_name.replace('"','')
+            url_name = url_name.replace('*','')
+
+            url_name = dir_name+'/'+ url_name + '.json'
 
             #print(url_name)
 
@@ -66,7 +72,7 @@ class Processor:
         except Exception as e:
             print(e)
 
-        print("pass saveOnJSON")
+        print("pass save_on_json")
 
 
 
