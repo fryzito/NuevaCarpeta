@@ -5,6 +5,7 @@ from random import randint
 import shutil 
 import os, errno
 import re
+
 from selenium import webdriver
 
 # These two will be implemented by us
@@ -28,9 +29,17 @@ class Proetica(object):
             'upgrade-insecure-requests': '1',
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36'
         }
-        #self.directory = 'inforegion/amazonia-2'
-        #self.create_directory(self.directory)
+        self.directory = 'ProeticaOutPut'
+        self.create_directory(self.directory)
 
+
+    def create_directory(self, directory):
+        try:
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise 
 
     def get_page(self, url):
         """
@@ -64,124 +73,6 @@ class Proetica(object):
         self.logger.custom('Script is going to sleep for %d seconds.' % script_sleep)
         time.sleep(script_sleep)
 
-    def scrape_item(self, url):
-        """
-        This method actually retrieves the data form the item itself and sends
-        the json to the Processor
-
-        Remember to log:
-
-        - That you started scraping this single item
-        - If any fields were not found
-        - If the request failed
-        - That the json was sent to the processor
-        - Any unexpected behavior
-        """
-
-        # Log that the individual scraping begins
-        self.logger.scraping_item(url)
-        print('Scraping %s' % url)
-
-        response = requests.get(url)
-        soup = BeautifulSoup(response.content)
-
-        result = {
-            'title': '',
-            'second_title':'',
-            'author': '',
-            'datetime': '',
-            'description': '', 
-            'html':response.text, 
-            'files': [],
-            'location':'',
-            'url':url
-        }
-
-        title = None
-        second_title = None
-        author = None
-        datetime = None
-        description = None
-        files = []
-        images = []
-        location = None
-
-
-        try:
-            title = soup.select_one('div.content-single h1').text
-        except:
-            self.logger.custom('Could not find field "title" in: %s' % url)
-
-        try:
-            second_title = soup.select_one('div.content-single small').text
-        except:
-            self.logger.custom('Could not find field "second title" in: %s' % url)
-
-        try:
-            author = '' #soup.select_one('').text
-        except:
-            self.logger.custom('Could not find field "author" in: %s' % url)
-
-        try:
-            loc_date_string = soup.select_one('div.content-single span.box-date').text
-            index_of_date = re.search("\d", loc_date_string)
-            location = loc_date_string[0:index_of_date.start()]
-            datetime = loc_date_string[index_of_date.start():].split(',')[0]
-        except:
-            self.logger.custom('Could not find field "datetime" in: %s' % url)
-
-        try:
-            body = ''
-            body_lis = soup.select ('div.content-single ul li')
-            if body_lis != None and len(body_lis) > 0:
-                temp = [li.text  for li in body_lis if li.text != "" ]
-                body += '\n'.join(temp)
-
-            body_ps = soup.select('div.content-single p')
-            if body_ps != None and len (body_ps) > 0 :
-                temp = [p.text for p in body_ps if p.text != "" ]
-                body += '\n'.join(temp)
-
-            body_h4 = soup.select('div.content-single.h4')
-            if body_h4 != None and len(body_h4) > 0:
-                temp = [h4.text for h4 in body_h4 if h4.text != ""]
-                body += '\n'.join(temp)
-            
-            description = body
-
-            
-        except:
-            self.logger.custom('Error processing body in: %s' % url)
-
-
-        try:
-            image_url  = soup.select_one('div.content-single div.description-img div.img_wrapper.center img')['src']
-            image_name = re.sub(r'\W+', '', image_url)+'.jpg'
-            image_path = os.path.join(self.directory, image_name) 
-            try: 
-                #Most images don't have text so its pointless to save them and sned to fscrawler 
-                self.download_image(image_url,image_path)
-                images.append(image_path)
-            except: 
-                self.logger.custom('Could not download the photo in: %s' % url)
-        except:
-            self.logger.custom('Could not find field "image_path" in: %s' % url)
-
-        result['title']= title
-        result['second_title']= second_title
-        result['author']= author
-        result['datetime']= datetime
-        result['description']= description
-        result['files']= files
-        result['images']= images
-        result['location']= location
-
-        # Send result to processor
-        self.processor.send(result, self)
-        # Log that results were sent
-        self.logger.result_sent(result)
-        self.sleep_script(1,4)
-
 
     def get_index_content(self, page_content, page_url):
         
@@ -214,7 +105,6 @@ class Proetica(object):
         location = None
 
 
-
         try:
             title = soup.h1.text
         except:
@@ -245,7 +135,7 @@ class Proetica(object):
 
             
         except:
-            self.logger.custom('Error processing body in: %s' % url)
+            self.logger.custom('Error processing description in: %s' % url)
 
 
         try:
@@ -288,7 +178,6 @@ class Proetica(object):
         except:
             self.logger.custom('Could not find field "image_path" in: %s' % url)
 
-
         result['title']= title
         result['second_title']= second_title
         result['author']= author
@@ -297,7 +186,6 @@ class Proetica(object):
         result['files']= files
         result['images']= images
         result['location']= location
-
 
 
         '''
@@ -312,14 +200,16 @@ class Proetica(object):
         print("result['url']:",result['url'],'\n')
         ''' 
 
+        self.processor.save_on_json(result, self.directory)
         # Send result to processor
         self.processor.send(result, self)
+
         # Log that results were sent
         self.logger.result_sent(result)
         self.sleep_script(1,4)
 
 
-    def find_items_in_page(self, page_content, page_url):
+    def find_items_in_page(self, page_url, driver):
         """
         This method finds all scrapeable items in the current page. In this case
         this helps us get the URL to the item itself. In some cases there could
@@ -331,48 +221,173 @@ class Proetica(object):
         Also use if/else in cases where you expect BeautifulSoup to find
         something to log the case where it doesn't find anything.
         """
-        soup = BeautifulSoup(page_content,'lxml')
 
-        body = soup.body
-        
-        periots = body.h3
+        print("Inicializando driver para la url:", page_url)
 
-        lists_a = periots.find_all('a')
 
-        # links by periots
-        list_links = []
-        for links in lists_a:
-            list_links.append(links['href'])
-        
-        # paginado
-        # creando driver
-        driver = webdriver.Chrome('/home/amigocloud/Documentos/ChromeDriver/chromedriver')
         driver.get(page_url)
-        sleep(2)
-        button = driver.find_element_by_link_text('')
-        button.click()
-        sleep(5)
-        driver.close()
+        self.sleep_script(2,5)
 
+        try:
+            if(page_url[len(page_url)-2] != '0'):
+                button = driver.find_element_by_xpath("//div[@id='interface']/div[@id='content-container']/div[@id='contentwrap']/div[@class='colleft']/div[@id='objContents']/div[@class='modHTM']/p[3]/a[8]")
+            else:
+                button = driver.find_element_by_xpath("//div[@id='interface']/div[@id='content-container']/div[@id='contentwrap']/div[@class='colleft']/div[@id='objContents']/div[@class='modHTM']/p[2]/a[9]")
+        except:
+            print(' except on driver.find ')
 
-        #for article in body:
-        #    link = article.select_one('a')
-        #    print(link)
+        self.sleep_script(2,5)
 
-            #items.append({
-            #        'article': article,
-            #        'url': link   
-            #})
-            #print('items')
-            #print(items)
-            #print('FIN items')
+        url_son = button.get_property("href")
 
+        # para sacar los links con soup
+        print(url_son)
+        current_son_page = self.get_page(url_son)
+
+        items = []
+
+        # extraer los link de la pagina
+        sub_soup = BeautifulSoup(current_son_page,'lxml')
+
+        body = sub_soup.body
+        links = body.find_all('a')
+
+        # Se deja afuera los que no son URLs validar esto una vez hecha click con selenium
+        size = len(links)-4
+        for cont,link in enumerate(links):
+            if cont >= 4 and cont < size :
+                aux = url_son[:27]+link.get('href')
+                items.append(aux)
+            
+        
+
+        # pasar a la siguiente pesta;a con el botton siguiente (OJO falta) limpiar los que no son links
 
         # Log the items found
         self.logger.found_items_in_page(items, page_url)
-
+        
         return items
 
+    def scrape_items(self, items):
+        """
+        This gets the DOM elements for the items and extracts the link
+        to the actual page. You can implement this however you like but
+        remember to log any unexpected behavior
+        """
+
+        for url_item in items:
+            if url_item:
+                self.scrape_item(url_item)
+            else:
+                self.logger.custom('Could not find url_item in item: %s', url_item)
+                pass
+                # log error. href not found
+
+
+    def scrape_item(self, url):
+        """
+        This method actually retrieves the data form the item itself and sends
+        the json to the Processor
+
+        Remember to log:
+
+        - That you started scraping this single item
+        - If any fields were not found
+        - If the request failed
+        - That the json was sent to the processor
+        - Any unexpected behavior
+        """
+
+        # Log that the individual scraping begins
+        self.logger.scraping_item(url)
+        print('Scraping %s' % url)
+
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content,'lxml')
+
+        
+        # Content attributes
+        list_attribs = ['periodo', 'legislatura', 'fecha presentacion', 'numero', 'proponente', 'grupo ', 'titulo',  'sumilla', 'autores', 'adherentes', 'seguimiento', 'iniciativas' ]
+
+        description_content = {
+            'periodo': '',
+            'legislatura': '',
+            'fecha presentacion': '',
+            'numero': '',
+            'proponente': '', 
+            'grupo': '', 
+            'titulo': '',
+            'sumilla': '',
+            'autores': '',
+            'adherentes': '',
+            'seguimiento': '',
+            'iniciativas': ''
+        }
+
+        table = soup.find('table')
+        
+        cont = 0
+        for index,tags in enumerate(table.descendants):
+            if tags.name == "tr":
+                tags = tags.table
+                if tags:
+                    for tr_index,tr_tags in enumerate(tags.descendants):
+                        td = tr_tags.find('td')
+                        if td and td != -1:
+                            # Primer attributo del row de la tabla
+                            #print('td 1 :',td.get_text())
+                            # Segundo attributo del row de la tabla
+                            #print('td 2 :',td.next_sibling.get_text())
+                            description_content[list_attribs[cont]] = td.next_sibling.get_text()
+                            cont = cont + 1
+                            if cont == len(list_attribs):
+                                break
+
+
+        #print('description',description_content)
+
+
+        result = {
+            'title': '',
+            'second_title':'',
+            'author': '',
+            'datetime': '',
+            'description': '', 
+            'html':response.text, 
+            'files': [],
+            'location':'',
+            'url':url
+        }
+
+        # merge attributes
+        title = description_content['titulo']
+        second_title = description_content['periodo']+' '+ description_content['legislatura']+' '+ description_content['numero']+' '+ description_content['fecha presentacion']
+        author = ' autores: '+description_content['autores']+' grupo: '+ description_content['grupo']+' adherentes: '+ description_content['adherentes']+' proponente: '+description_content['proponente']
+        datetime = None
+        description = description_content['seguimiento']+' '+ description_content['sumilla']
+        files = []
+        images = []
+        location = None
+
+        result['title']= title
+        result['second_title']= second_title
+        result['author']= author
+        result['datetime']= datetime
+        result['description']= description
+        result['files']= files
+        result['images']= images
+        result['location']= location
+
+        #print(result)
+        # Send result to processor
+        self.processor.save_on_json(result, self.directory)
+        self.processor.send(result, self)
+        # Log that results were sent
+        self.logger.result_sent(result)
+        print(result)
+        print('sucessfully')
+        print('')
+        self.sleep_script(1,3)
 
         
     def run(self):
@@ -400,27 +415,54 @@ class Proetica(object):
         ## Log the URL of the next page
         self.logger.looking_for_items_in_page(self.url)
         
+        # Link para provar la recoleccion de la tabla
+        ##str_prove = 'http://www2.congreso.gob.pe/Sicr/TraDocEstProc/CLProLey2016.nsf/641842f7e5d631bd052578e20058a231/db5f4db0c7192b8805258005006c32ae?OpenDocument'
+        ##self.scrape_item(str_prove)
+
+        
         try:
             #print(current_page)
             while current_page:
                 
                 result = self.get_index_content(current_page, self.url)
+                # iterar  entre pesta;as
+
+                soup = BeautifulSoup(current_page,'lxml')
+                body = soup.body
+                periots = body.h3
+                lists_a = periots.find_all('a')
+                # links by periots # loop para cambiar de ventanas
+                driver = webdriver.Chrome('/home/amigocloud/Documentos/ChromeDriver/chromedriver')
                 
-                items = self.find_items_in_page(current_page, self.url )
+                items = self.find_items_in_page(self.url, driver)
 
-                print(items)
-                #result = self.scrape_items(items) # <+====
-                #print('despues de results')
-                #print(result)
-                #next_page_url = self.next_page_url(current_page)
+                self.scrape_items(items) # <+====
 
-                if not next_page_url:
-                    break
 
-                # Log the URL of the next page
-                self.logger.looking_for_items_in_page(next_page_url)
-                #current_page = self.get_page(next_page_url)
+                for links in lists_a:
+
+                    url_string_srt = str(links['href'])
+
+                    prefix = "http://www.congreso.gob.pe/"
+                    # /Docs/spa/../../pley-2006-2011/
+                    prefix = prefix + url_string_srt[16:]
+                    
+                    items = []
+                    print(prefix)
+                    items = self.find_items_in_page(prefix, driver)
+
+                    result = self.scrape_items(items) # <+====
+
                 
+
+                driver.close()
+                print('salio de drive.close()')
+                print('salio')
+                
+                break # salir del while
+
+                
+
         except:
             print('except')
             # If anything happens to interrupt the scraping: log it
@@ -429,6 +471,7 @@ class Proetica(object):
 
         # Log that the scraping finished successfully
         self.logger.finished_scraping_run()
+        
 
 if __name__ == '__main__':
     
