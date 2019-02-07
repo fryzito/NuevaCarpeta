@@ -6,6 +6,9 @@ import json
 import os, errno
 import time
 
+from selenium import webdriver
+from selenium.webdriver.support.ui import Select
+
 # These two will be implemented by us
 from logger import Logger
 from processor import Processor
@@ -85,6 +88,102 @@ class contraloria(object):
 		return pdf_name
 
 
+
+	def get_text_list_in_drop_down(self, drop_down):
+		ans = []
+		for tag in drop_down.descendants:
+			if tag.name == 'option':
+				ans.append(tag.get_text())
+		return ans
+
+
+	def get_items(self, str_html):
+
+		soup = BeautifulSoup(str_html,'lxml')
+
+		head = soup.head
+		body = soup.body
+
+		items = []
+
+		if head.get_text() == '':
+			print('None on current page')
+			return None
+		else:
+			# list all items
+			print('Entro porque encontro texto en head')
+			items_by_page = body.find_all('tbody')
+			print('La longitud de items by pague es:')
+			print(len(items_by_page))
+			for item in items_by_page:
+				print('-------items by pague ------')
+				if item.find('tbody') != None:
+					items.append(item)
+					print(len(items))
+				else:
+					print('item.find(tbody)')
+					print(item.find('tbody'))
+
+			# pagination enough
+
+		return items
+
+
+	def get_items_in_drop_down(self, current_page):
+		items = []
+		soup = BeautifulSoup(current_page,'lxml')
+		body = soup.body
+
+		content_box = body.find('div', {'class':'content-page'})
+
+		drop_down1 = content_box.find('select', {'id':'selAnhoNormativa'})
+		drop_down2 = content_box.find('select', {'id':'selMesNormativa'})
+
+		# obtain drop drow elements
+		years = self.get_text_list_in_drop_down(drop_down1)
+		months = self.get_text_list_in_drop_down(drop_down2)
+
+		print(years)
+		print(months)
+
+		# use selenium for iterate beetween all items
+		driver = webdriver.Chrome('/home/amigocloud/Documentos/ChromeDriver/chromedriver')
+		driver.get(self.url)
+		self.sleep_script(2,3)
+
+		# change drop down
+		for year in years:
+			
+			button = driver.find_element_by_xpath('//*[@id="selAnhoNormativa"]')
+			Select(button).select_by_visible_text(year)
+			for month in months:
+				
+				button2 = driver.find_element_by_xpath('//*[@id="selMesNormativa"]')
+				Select(button2).select_by_visible_text(month)
+				self.sleep_script(1,2)
+
+				# extract item
+				iframe = driver.find_element_by_tag_name("iframe")
+				driver.switch_to.frame(iframe)
+
+				html = driver.page_source
+
+				# obtain item
+				items_on_one_combination_of_drop_down = self.get_items(html)
+
+				if items_on_one_combination_of_drop_down:
+					print('add to items')
+					# do for for append items
+					items = items + items_on_one_combination_of_drop_down
+					print(len(items))
+				
+				driver.switch_to.default_content()
+		
+		driver.close()
+
+		return items
+
+
 	def run(self,id_page):
 		"""
         This is the main method. Your scraper should always run like this:
@@ -105,16 +204,13 @@ class contraloria(object):
 
 		try:
 			while current_page:
-				# buscar item en la pagina item tiene urls
-				items = []
-				soup = BeautifulSoup(current_page,'lxml')
-				body = soup.body
+				
+				# obtain items 
+				items = self.get_items_in_drop_down(current_page)
+				print('number of items:')
+				print(items)
 
-				content_box = body.find('div', {'class':'content-page'})
-
-				print(content_box.h4)
-				print(content_box.h2)
-
+				# procesar los items
 
 
 				break
@@ -126,7 +222,7 @@ class contraloria(object):
 
 if __name__ == '__main__':
 
-	url1 = 'http://www.contraloria.gob.pe/wps/wcm/connect/cgrnew/as_contraloria/as_portal/publicaciones/as_memorias'
+	url1 = 'http://www.contraloria.gob.pe/wps/wcm/connect/cgrnew/as_contraloria/as_portal/publicaciones/as_boletin_contra'
 
 	scraper = contraloria(url1)
 	scraper.run(1)
