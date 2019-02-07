@@ -1,3 +1,3 @@
 NuevaCarpeta
 ============
-Esta es una carpeta de prueba para ver si el commit llegara
+Esta es una carpeta de prueba para ver si el commit llegó
