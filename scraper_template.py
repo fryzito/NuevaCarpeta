@@ -75,8 +75,11 @@ class scraper(object):
 
 
 
-	def scrape_item(self, current_container, id_page):
+	def scrape_item(self, current_container, current_container_refs, id_page):
 
+
+		
+		'''
 		tbody = current_container.find('tbody')
 		#print('paso1')
 		print('paso2')
@@ -199,7 +202,7 @@ class scraper(object):
 			print('sucessfully')
 			print('')
 
-		print('paso el doble bucle completo ')
+		'''
 	
 
 	def clean_url(self, file_name):
@@ -214,14 +217,6 @@ class scraper(object):
 		file_name = file_name.replace('*','')
 
 		return file_name
-
-
-	def get_text_list_in_drop_down(self, drop_down):
-		ans = []
-		for tag in drop_down.descendants:
-			if tag.name == 'option':
-				ans.append(tag.get_text())
-		return ans
 
 
 	def get_items_on_iframe(self, str_html):
@@ -267,11 +262,15 @@ class scraper(object):
 
 		content_box = body.find('div', {'class':'entry-content'})
 
-		print(content_box)
+		# call first item to iterate with next_siblings
+		first_div = content_box.div
+		items_on_view.append(first_div)
 
+		for div_element in first_div.next_siblings :	
 
-
-
+			# validate only items
+			if type(div_element.find('a')) == type(first_div) :
+				items_on_view.append(div_element)
 
 		return items_on_view
 
@@ -282,9 +281,11 @@ class scraper(object):
         to the actual page. You can implement this however you like but
         remember to log any unexpected behavior
         """
-		for index, container in enumerate(items):
+		for container, container_refs in zip(items[0::2],items[1::2]):
 			if container:
-				self.scrape_item(container,id_page)
+
+				self.scrape_item(container, container_refs, id_page)
+
 			else:
 				self.logger.custom('Could not find container in item: %s', container)
 				pass
@@ -313,10 +314,10 @@ class scraper(object):
 				# Obtain items
 				page_items = self.get_items(current_page)
 
-				#print('number of items to process:',len(items_on_pague))
-
+				print('number of items to process:',len(page_items))
+				
 				# procesar los items
-				#self.scrape_items(items_on_pague,id_page)
+				self.scrape_items(page_items,id_page)
 
 				break
 
