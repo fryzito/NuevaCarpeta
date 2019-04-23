@@ -25,6 +25,37 @@ kali linux, como herramienta.
 utilizar la version mas liviana de kali linux.
 
 
+Tercera clase
+==============
+Tercera clase ingenieria inversa
+================================
+
+programa CrackMe_Flux.exe (Programa)
+
+explicacion de x32dbg
+
+Se utiliza lenguaje ensamblador.
+
+Para exploit se utiliza x32dbg, 
+
+encontrar condicionales.
+
+Es posible buscar un nombre de serial mediante el mensaje.
+
+empaquetadores que ocultan inforacion.
+
+
+Encontrar el entry point de un programa.
+
+inicios de posicion de memoria
+++++++++++++++++++++++++++++++
+1 programa
+6 programa
+4 por default
+7 libreria dll (no se necesita analizarlo)
+
+
+
 
 
 
