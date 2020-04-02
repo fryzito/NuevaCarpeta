@@ -68,7 +68,7 @@ class Processor:
             #print(url_name)
 
             with open(url_name, 'w') as outfile:  
-                json.dump(result, outfile)
+                json.dump(result,outfile)
         except Exception as e:
             print(e)
 

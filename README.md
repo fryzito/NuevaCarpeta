@@ -1,3 +1,6 @@
-NuevaCarpeta
-============
-Esta es una carpeta de prueba para ver si el commit llegó
+# Scraper examples
+## Example scrapers on python
+Multiple files as:
+* SQL 
+* TXT
+* py
